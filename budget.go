@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/xid"
 )
 
 type Page struct {
@@ -25,17 +28,34 @@ func main() {
 }
 
 func rootPage(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("This is a root Page"))
+	w.Write([]byte("Felicidades, Conectado"))
 }
 
 func nuevacuenta(w http.ResponseWriter, r *http.Request) {
 	fetchCuentaName := mux.Vars(r)["fetchCuentaName"]
+	guid := xid.New()
+
+	newAccount := Cuenta{
+		id:    guid.String(),
+		fecha: time.Now(),
+		name:  fetchCuentaName,
+	}
+
+	jsonAccount, err := json.Marshal(newAccount.id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonAccount)
+	}
 	//Aqui deberia ir la insercion en la base de datos
-	w.Write([]byte(fetchCuentaName))
+	//w.Write([]byte("ID: " + newAccount.id + " Fecha: " + newAccount.fecha.Local().String() + " name: " + newAccount.name))
 }
 
 type Cuenta struct {
-	id      int
+	id      string
+	name    string
+	fecha   time.Time
 	Packs   []Pack
 	Equipo  Equipo
 	Totales Totales
@@ -83,4 +103,3 @@ type Totales struct {
 	Bot        uint32
 	BotDolares uint32
 }
-
